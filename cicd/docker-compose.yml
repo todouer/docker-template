@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    container_name: gitlab
+    ports:
+      - "2233:80"
+      - "4455:443"
+    volumes:
+      - ./gitlab/config:/etc/gitlab
+      - ./gitlab/logs:/var/log/gitlab
+      - ./gitlab/data:/var/opt/gitlab
+
+  postgres:
+    image: postgres:12
+    container_name: postgres
+    environment:
+      POSTGRES_USER: gitlab
+      POSTGRES_PASSWORD: your_password
+      POSTGRES_DB: gitlab
+    volumes:
+      - ./gitlab/postgresql:/var/lib/postgresql/data
+
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    ports:
+      - "8081:8080"
+      - "50000:50000"
+    volumes:
+      - ./jenkins:/var/jenkins_home
+    environment:
+      - JENKINS_JAVA_OPTS="-Duser.timezone=America/New_York"
+
+  node1:
+    build:
+      context: ./node1
+      dockerfile: Dockerfile
+    container_name: node1
+    ports:
+      - "2222:22"
+      - "8081:80"
+    volumes:
+      - ./node1/workspace:/usr/share/nginx/html
+
+networks:
+  default:
+    driver: bridge
